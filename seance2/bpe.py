@@ -6,8 +6,6 @@
 import re
 from collections import Counter
 
-from seance1 import texte
-
 # Le marqueur de fin de mot. Il n'est pas un octet, il ne peut donc jamais
 # être confondu avec un caractère du texte.
 FIN = "</w>"
@@ -25,6 +23,14 @@ MOTIF = r' \d+\.\d+ | != | <= | >= | \w+ |\ s+ | [^\w\s] '
 CAMEL = r"(?<=[a-z0-9])(?=[A-Z]) | (?<=[A-Z])(?=[A-Z][a-z])"
 
 
+# ====================================================
+
+# re.split(r"(_)", "_email") --> Résultat : ['', '_', 'email'] --> Remarquez le '' au début 
+# La condition if partie: permet d'ignorer cet élément vide '' et de ne traiter que '_' et 'email'
+
+# Le filtre if p dans la compréhension de liste (p for p in ... if p) garantit que seules les vraies
+# chaînes de caractères (non vides) sont conservées et insérées dans mots.
+
 def pretokeniser(texte):
     """Pose les frontières de mots. Un identifiant est coupé sur ses tirets bas
     (gardés comme tokens) et sur ses changements de casse."""
@@ -39,6 +45,9 @@ def pretokeniser(texte):
             mots.append(morceau)
     return mots
 
+
+
+# ====================================================
 
 def en_octets(mot):
     """Écrit un mot comme suite de symboles de base, un par octet UTF-8,
@@ -98,7 +107,7 @@ def fusionner(paire, corpus):
     nouveau = {}
     for symboles, freq in corpus.items():
         s = fusionner_mot(paire, symboles)
-        nouveau[s] = nouveau.get(s, 0) + freq
+        nouveau[s] = nouveau.get(s, 0) + freq  # La fusion de deux symboles peut créer des doublons de clés dans le nouveau dictionnaire nouveau
     return nouveau
 
 
@@ -108,8 +117,17 @@ def entrainer(mots, nb_fusions):
     corpus = {tuple(en_octets(mot)): freq for mot, freq in mots.items()}
     fusions = []
     for _ in range(nb_fusions):
-        raise NotImplementedError("partie 3 du TP, les trois gestes de la boucle")
-    vocabulaire = set(BASE) | {FIN} | {a + b for a, b in fusions}
+        paires = compter_paires(corpus) # { (v,a) : fréquence de la paire (v,a) dans le corpus }
+        if not paires:
+            break
+        meilleure = max(paires, key=lambda p: (paires[p], longueur(p[0] + p[1])))
+            # Sélectionne en priorité la paire p = (A, B) la plus fréquente dans le corpus.
+            # En cas d'égalité de fréquence entre deux paires, Python choisit la paire dont le symbole résultant sera le plus long 
+        corpus = fusionner(meilleure, corpus)
+            # Remplace toutes les occurrences de la paire meilleure dans le corpus par le nouveau symbole fusionné A+B
+        fusions.append(meilleure)
+    vocabulaire = set(BASE) | {FIN} | {a + b for a, b in fusions} # {} : crée un ensemble/set (pas de doublons)
+        # Le vocabulaire V est l'ensemble des symboles de base, plus le marqueur de fin de mot, plus tous les symboles fusionnés appris.
     return fusions, vocabulaire
 
 
@@ -123,7 +141,9 @@ def encoder_mot(mot, rangs):
     (rang le plus petit) d'abord, jusqu'à ce qu'aucune ne s'applique."""
     symboles = en_octets(mot)
     while len(symboles) > 1:
-        candidates = [(rangs[(a, b)], (a, b)) for a, b in zip(symboles, symboles[1:]) if (a, b) in rangs]
+        candidates = [(rangs[(a, b)], (a, b)) 
+                      for a, b in zip(symboles, symboles[1:]) 
+                      if (a, b) in rangs]
         if not candidates:
             break
         _, paire = min(candidates)

@@ -4,7 +4,7 @@
 #  (des textes que l'entraînement n'a jamais vus, comme en production).
 #  Usage : python mesure_fertilite.py
 # ============================================================
-import glob
+import glob # Trouver automatiquement les fichiers d'un dossier et de ses sous-dossiers.
 import time
 import json
 from collections import Counter
@@ -15,15 +15,15 @@ TAILLES = [500, 1000, 2000, 4000, 8000]       # tailles cibles de V
 BASE_ET_MARQUEUR = 257                          # 256 octets + le marqueur de fin de mot
 
 
-def lire_dossier(dossier):
+def lire_dossier(dossier): # recherche et lit plusieurs fichiers présents dans un dossier et ses sous-dossiers.
     """Concatène tous les fichiers texte d'un dossier et de ses sous-dossiers."""
     textes = []
     for chemin in sorted(glob.glob(dossier + "/**/*.*", recursive=True)):
         textes.append(open(chemin, encoding="utf-8").read())
-    return "".join(textes)
+    return "".join(textes) # rassemble tous ces contenus en une seule chaîne
 
 
-def lire(chemin):
+def lire(chemin): # lit un fichier précis, dont tu connais déjà le chemin.
     return open(chemin, encoding="utf-8").read()
 
 
