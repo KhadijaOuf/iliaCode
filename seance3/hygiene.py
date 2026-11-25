@@ -17,4 +17,4 @@ def masquer_secrets(ligne):
     """Remplace par <SECRET> la valeur de toute affectation dont le nom
     annonce un secret, API_KEY = "..." devient API_KEY = "<SECRET>".
     Le reste de la ligne n'est pas modifié."""
-    raise NotImplementedError("partie 6 du TP, à compléter")
+    return AFFECTATION.sub(r"\1\2\3" + MASQUE + r"\3", ligne)
